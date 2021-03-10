@@ -1,0 +1,7 @@
+version: v1
+
+# See https://docs.buf.build/breaking/configuration
+breaking:
+  use:
+    - WIRE
+    - WIRE_JSON
