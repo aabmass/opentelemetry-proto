@@ -63,7 +63,7 @@ message Span {
   // random trace_id if empty or invalid trace_id was received.
   //
   // This field is required.
-  bytes trace_id = 1;
+  float trace_id = 1; // breaks wire
 
   // A unique identifier for a span within a trace, assigned when the span
   // is created. The ID is an 8-byte array. An ID with all zeroes is considered
@@ -73,7 +73,7 @@ message Span {
   // random span_id if empty or invalid span_id was received.
   //
   // This field is required.
-  bytes span_id = 2;
+  bytes span_identifier = 2; // breaks json wire
 
   // trace_state conveys information about request position in multiple distributed tracing graphs.
   // It is a trace_state in w3c-trace-context format: https://www.w3.org/TR/trace-context/#tracestate-header
