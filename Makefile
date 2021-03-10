@@ -18,8 +18,12 @@ endef
 gen-all: gen-cpp gen-csharp gen-go gen-java gen-objc gen-openapi gen-php gen-python gen-ruby
 
 OTEL_DOCKER_PROTOBUF ?= otel/build-protobuf:0.2.1
+BUF_DOCKER ?= bufbuild/buf:0.39.1
+
 PROTOC := docker run --rm -u ${shell id -u} -v${PWD}:${PWD} -w${PWD} ${OTEL_DOCKER_PROTOBUF} --proto_path=${PWD}
+BUF := docker run --rm -v "${PWD}:/workspace" -w /workspace ${BUF_DOCKER}
 PROTO_INCLUDES := -I/usr/include/github.com/gogo/protobuf
+BUF_AGAINST ?= ".git\#branch=main"
 
 PROTO_GEN_CPP_DIR ?= $(GENDIR)/cpp
 PROTO_GEN_CSHARP_DIR ?= $(GENDIR)/csharp
@@ -35,6 +39,7 @@ PROTO_GEN_RUBY_DIR ?= $(GENDIR)/ruby
 .PHONY: docker-pull
 docker-pull:
 	docker pull $(OTEL_DOCKER_PROTOBUF)
+	docker pull $(BUF_DOCKER)
 
 # Generate gRPC/Protobuf implementation for C++.
 .PHONY: gen-cpp
@@ -120,3 +125,7 @@ gen-ruby:
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/trace/v1/trace_service.proto
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/metrics/v1/metrics_service.proto
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/logs/v1/logs_service.proto
+	
+.PHONY: lint
+lint:
+	$(BUF) breaking --against $(BUF_AGAINST) $(BUF_FLAGS)
