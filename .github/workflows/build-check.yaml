@@ -75,3 +75,29 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: make gen-ruby
+
+  lint:
+    needs: docker-pull
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Fetch main branch for comparison
+      run: git fetch && git checkout main && git checkout -
+    - name: Run make lint with json output to annotate PR
+      id: run_lint
+      continue-on-error: true
+      run: >
+        BUF_FLAGS="--error-format json" make lint
+        | tail -n +2
+        | jq -s '[.[] | . + {title: "Buf \(.type)"}]'
+        | tee annotations.json
+        ; (exit ${PIPESTATUS[0]})
+    - name: Annotate breaking changes on PR
+      if: ${{ steps.run_lint.outcome == 'failure' && github.event_name == 'pull_request' }}
+      uses: yuzutech/annotations-action@v0.3.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        input: ./annotations.json
+        title: lint
+    - run: exit 1
+      if: ${{ steps.run_lint.outcome == 'failure' }}
