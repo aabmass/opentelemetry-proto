@@ -20,7 +20,7 @@ all: gen-all markdown-link-check
 .PHONY: gen-all
 gen-all: gen-cpp gen-csharp gen-go gen-java gen-kotlin gen-objc gen-openapi gen-php gen-python gen-ruby
 
-OTEL_DOCKER_PROTOBUF ?= otel/build-protobuf:0.9.0
+OTEL_DOCKER_PROTOBUF ?= otel/build-protobuf:local
 BUF_DOCKER ?= bufbuild/buf:1.7.0
 
 PROTOC := docker run --rm -u ${shell id -u} -v${PWD}:${PWD} -w${PWD} ${OTEL_DOCKER_PROTOBUF} --proto_path=${PWD}
@@ -41,6 +41,7 @@ PROTO_GEN_OPENAPI_DIR ?= $(GENDIR)/openapi
 PROTO_GEN_PHP_DIR ?= $(GENDIR)/php
 PROTO_GEN_PYTHON_DIR ?= $(GENDIR)/python
 PROTO_GEN_RUBY_DIR ?= $(GENDIR)/ruby
+PROTO_GEN_JSONSCHEMA_DIR ?= $(GENDIR)/jsonschema
 
 # Docker pull image.
 .PHONY: docker-pull
@@ -150,6 +151,14 @@ gen-ruby:
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/trace/v1/trace_service.proto
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/metrics/v1/metrics_service.proto
 	$(PROTOC) --ruby_out=./$(PROTO_GEN_RUBY_DIR) --grpc-ruby_out=./$(PROTO_GEN_RUBY_DIR) opentelemetry/proto/collector/logs/v1/logs_service.proto
+
+# Generate jsonschema files from protobufs
+.PHONY: gen-jsonschema
+gen-jsonschema:
+	mkdir -p $(PROTO_GEN_JSONSCHEMA_DIR)
+	$(PROTOC) --jsonschema_out=json_fieldnames:$(PROTO_GEN_JSONSCHEMA_DIR) opentelemetry/proto/collector/trace/v1/trace_service.proto
+	$(PROTOC) --jsonschema_out=json_fieldnames:$(PROTO_GEN_JSONSCHEMA_DIR) opentelemetry/proto/collector/metrics/v1/metrics_service.proto
+	$(PROTOC) --jsonschema_out=json_fieldnames:$(PROTO_GEN_JSONSCHEMA_DIR) opentelemetry/proto/collector/logs/v1/logs_service.proto
 	
 .PHONY: breaking-change
 breaking-change:

@@ -1,12 +1,11 @@
 {
-  "resourceMetrics": [
     {
       "resource": {
         "attributes": [
           {
             "key": "service.name",
             "value": {
-              "stringValue": "my.service"
+              "doubleValue": 0
             }
           }
         ]
